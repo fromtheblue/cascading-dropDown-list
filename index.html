@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="jquery-1.11.1.js"></script>
+    <script src="data.js"></script>
+    <script>
+        console.log(datas);
+        var provinces=Object.keys(datas).filter(function(id){
+            return id.slice(2)==="0000";
+        }).reduce(function(target,id){
+            target[id]=datas[id];
+            return target;
+        },{});
+        console.log(provinces);
+    </script>
+</head>
+<body>
+    <style>
+        .cascading-dropDown-container{
+            margin-top: 200px;
+            margin-left: 200px;
+            display: inline-block;
+            border-style:solid;
+            border-width: 1px 1px 0 1px;
+            border-color: #aaa;
+        }
+        .cascading-dropDown-container::after{
+            content: "";
+            display: block;
+            border-bottom: 1px solid white;
+            position: relative;
+        }
+        .cascading-dropDown-label{
+            padding: 0 8px;
+            display: inline-block;
+        }
+        .cascading-dropDown-list-container{
+            width: 400px;
+            border:1px solid #aaa;
+            position: absolute;
+            margin-left: -50px;
+            padding: 15px;
+        }
+        .cascading-close{
+            float: right;
+            margin-right: -10px;
+            margin-top: -10px;
+            cursor: pointer;
+            color: #666;
+        }
+        .cascading-close:hover{
+            color: #333;
+        }
+        .cascading-close:active{
+            color: #222;
+        }
+        .cascading-labs{
+            border-bottom: 2px solid red;
+        }
+        .cascading-lab{
+            padding: 0 8px;
+            color:#005aa0;
+            display: inline-block;
+            border-style:solid;
+            border-width: 1px 1px 2px 1px;
+            border-color: #aaa #aaa transparent #aaa;
+            margin-bottom: -2px;
+            cursor: pointer;
+        }
+        .cascading-dropDown-label::after,.cascading-lab::after{
+            color: #aaa;
+            margin: 0 -4px 0 8px;
+            content: ">";
+            display: inline-block;
+            -moz-transform:rotate(90deg);
+            -webkit-transform:rotate(90deg);
+            -ms-transform:rotate(90deg);
+            transform:rotate(90deg);
+        }
+        .cascading-dropDown-label:hover::after.cascading-lab:hover::after{
+            color:#999;
+        }
+        .cascading-lab.active{
+            border-width:2px;
+            border-color: red red white red;
+        }
+        .cascading-dropDown-list-container ul{
+            margin: 0;
+            padding: 0;
+        }
+        .cascading-dropDown-list-container li{
+            list-style: none;
+            display: inline-block;
+        }
+        .cascading-item{
+            margin: 10px 10px;
+            padding: 4px 8px;
+            display: inline-block;
+            cursor: pointer;
+            color: #005aa0;
+        }
+        .cascading-item:hover{
+            color: white;
+            background-color: #005aa0;
+        }
+    </style>
+    <div id="cascading-dropDown" class="cascading-dropDown-container">
+        <!--<span class="cascading-dropDown-label">宁夏石嘴山市惠农区</span>
+        <div class="cascading-dropDown-list-container">
+            <div class="cascading-close">&times;</div>
+            <div class="cascading-labs">
+                <div class="cascading-lab active">上海</div>
+                <div class="cascading-lab">峡北区</div>
+                <div class="cascading-lab">请选择</div>
+            </div>
+            <div class="cascading-content">
+                <ul>
+                    <li>
+                        <a class="cascading-item">北京</a>
+                    </li>
+                    <li>
+                        <a class="cascading-item">上海</a>
+                    </li>
+                    <li>
+                        <a class="cascading-item">天津</a>
+                    </li>
+                    <li>
+                        <a class="cascading-item">重庆</a>
+                    </li>
+                    <li>
+                        <a class="cascading-item">河北</a>
+                    </li>
+                    <li>
+                        <a class="cascading-item">山西</a>
+                    </li>
+                </ul>
+            </div>
+        </div>-->
+    </div>
+    <script>
+        (function($){
+            if($.fn.cascadingDropdownList){
+                return;
+            }
+            var setMethods={
+
+            };
+            var getMethods={
+
+            };
+            $.fn.cascadingDropdownList=function(){
+                var args=arguments,params,method;
+                if(!args.length|| typeof args[0] == 'object'){
+                    return this.each(function(idx){
+                        var $self=$(this);
+                        $self.data('cascadingDropdownList',$.extend(true,{},$.fn.cascadingDropdownList.default,args[0]));
+                        params=$self.data('cascadingDropdownList');
+                        _init.call( $self,params);
+                        _render.call($self);
+                    });
+                }else{
+                    if(!$(this).data('cascadingDropdownList')){
+                        throw new Error('You has not init cascadingDropdownList!');
+                    }
+                    params=Array.prototype.slice.call(args,1);
+                    if (setMethods.hasOwnProperty(args[0])){
+                        method=setMethods[args[0]];
+                        return this.each(function(idx){
+                            var $self=$(this);
+                            method.apply($self,params);
+                            _render.call($self);
+                        });
+                    }else if(getMethods.hasOwnProperty(args[0])){
+                        method=getMethods[args[0]];
+                        return method.apply(this,params);
+                    }else{
+                        throw new Error('There is no such method');
+                    }
+                }
+            }
+            $.fn.cascadingDropdownList.default={
+
+            }
+            function _init(params){
+                return this;
+            }
+            function _render(){
+                var $self=this,
+                        params=$self.data("cascadingDropdownList");
+                $self.addClass("cascading-dropDown-container").html([
+                    $("<span/>",{
+                        "class":"cascading-dropDown-label",
+                        "html":"宁夏石嘴山市惠农区"
+                    }),
+                    $("<div/>",{
+                        "class":"cascading-dropDown-list-container"
+                    }).append(
+                        $("<div/>",{
+                            "class":"cascading-close",
+                            "html":"&times;"
+                        }),
+                        $("<div/>",{
+                            "class":"cascading-labs"
+                        }).append(
+                            ["上海","峡北区","请选择"].map(function(data,idx){
+                                return $("<div/>",{
+                                    "class":"cascading-lab",
+                                    "html":data
+                                })
+                            })
+                        ),
+                        $("<div/>",{
+                            "class":"cascading-content"
+                        }).append(
+                            $("<ul/>").append(
+                                ["北京","上海","天津","重庆","河北","山西"].map(function(data){
+                                    return $("<li/>").append(
+                                        $("<a/>",{
+                                            "class":"cascading-item",
+                                            "html":data
+                                        })
+
+                                    )
+                                })
+                            )
+                        )
+                    )]
+                )
+            }
+        })(jQuery);
+        $("#cascading-dropDown").cascadingDropdownList();
+    </script>
+</body>
+</html>
