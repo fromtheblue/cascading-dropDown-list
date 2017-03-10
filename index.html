@@ -2,275 +2,45 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>cascading-dropDown-list</title>
+    <link rel="stylesheet" href="cascadingDropdownList/cascadingDropdownList.css">
     <script src="jquery-1.11.1.js"></script>
+    <script src="cascadingDropdownList/cascadingDropdownList.js"></script>
     <script src="data.js"></script>
-    <script>
-        var provinces=Object.keys(areas).filter(function(id){
-            return id.slice(2)==="0000";
-        }).map(function(id){
-            return {value:id,text:areas[id]};
-        });
-        console.log(provinces);
-    </script>
 </head>
 <body>
-    <style>
-        .cascading-dropDown-container{
-            margin-top: 200px;
-            margin-left: 200px;
-            display: inline-block;
-            border-style:solid;
-            border-width: 1px;
-            border-color: #aaa;
-        }
-        .cascading-dropDown-container::after{
-            content: "";
-            display: block;
-            border-bottom: 1px solid white;
-            position: relative;
-        }
-        .cascading-dropDown-label{
-            padding: 4px 8px;
-            display: inline-block;
-            color:#333;
-        }
-        .cascading-dropDown-list-container{
-            width: 600px;
-            border:1px solid #aaa;
-            background-color: white;
-            position: absolute;
-            margin-left: -50px;
-            padding: 15px;
-        }
-        .cascading-close{
-            float: right;
-            margin-right: -10px;
-            margin-top: -10px;
-            cursor: pointer;
-            color: #666;
-        }
-        .cascading-close:hover{
-            color: #333;
-        }
-        .cascading-close:active{
-            color: #222;
-        }
-        .cascading-labs{
-            border-bottom: 2px solid red;
-        }
-        .cascading-lab{
-            padding: 0 8px;
-            color:#005aa0;
-            display: inline-block;
-            border-style:solid;
-            border-width: 1px 1px 2px 1px;
-            border-color: #aaa #aaa transparent #aaa;
-            margin-bottom: -2px;
-            margin-right:4px;
-            cursor: pointer;
-        }
-        .cascading-dropDown-label::after,.cascading-lab::after{
-            color: #aaa;
-            margin: 0 -4px 0 8px;
-            content: ">";
-            display: inline-block;
-            -moz-transform:rotate(90deg);
-            -webkit-transform:rotate(90deg);
-            -ms-transform:rotate(90deg);
-            transform:rotate(90deg);
-        }
-        .cascading-dropDown-label:hover::after.cascading-lab:hover::after{
-            color:#999;
-        }
-        .cascading-lab:last-child{
-            border-width:2px;
-            border-color: red red white red;
-        }
-        .cascading-dropDown-list-container ul{
-            margin: 0;
-            padding: 0;
-        }
-        .cascading-dropDown-list-container li{
-            list-style: none;
-            display: inline-block;
-        }
-        .cascading-item{
-            width: 150px;
-            margin: 10px 10px;
-            padding: 4px 0px;
-            display: inline-block;
-            cursor: pointer;
-            color: #005aa0;
-            text-align: center;
-        }
-        .cascading-item:hover{
-            color: white;
-            background-color: #005aa0;
-        }
-        .cascading-loading{
-            margin-top: 15px;
-            color: #aaa;
-        }
-        .cascading-hide{
-            display: none;
-        }
-    </style>
-    <div id="cascading-dropDown">
-
-    </div>
+    <div id="cascading-dropDown"></div>
+    <button id="getCheckedTabs">获取选中的tabs</button>
+    <button id="getChecked">获取当前选中的数据</button>
+    <button id="getValue">获取当前值</button>
+    <textarea id="show" cols="30" rows="10"></textarea>
     <script>
-        (function($){
-            if($.fn.cascadingDropdownList){
-                return;
-            }
-            var setMethods={
-                setOption:setOption
-            };
-            var getMethods={
-
-            };
-            $.fn.cascadingDropdownList=function(){
-                var args=arguments,params,method;
-                if(!args.length|| typeof args[0] == 'object'){
-                    return this.each(function(idx){
-                        var $self=$(this);
-                        $self.data('cascadingDropdownList',$.extend(true,{},$.fn.cascadingDropdownList.default,args[0]));
-                        params=$self.data('cascadingDropdownList');
-                        _init.call( $self,params);
-                        _render.call($self);
+        $("#cascading-dropDown").cascadingDropdownList({
+            name:"area",
+            datas:[{text:"县",value:"110200"},{text:"市辖区",value:"110100"}],
+            tabs:[{text:"北京市",value:"110000"},{text:"市辖区",value:"110100"}],
+            placeholder:"请选择",
+            clickTab:function(tab,idx,tabs,datas){
+                /*因为点击某一级tab时候下拉面板中的数据是通过上级tab来决定的，
+                * 比如当前的tabs为 北京市 市辖区 海淀区
+                * 当点击市辖区的时候，其实是要获取北京市下面的两个区 市辖区 县
+                * 来填充到面板中的，因此先要获取当前tab前面的那个tab,即tabs[idx-1]
+                * */
+                var prevTab=tabs[idx-1];
+                /*
+                * 如果当前点击的tab前面的tab不存在的话,显然该填充省份
+                * */
+                if(!prevTab){
+                    /*获取所有的省份*/
+                    datas=Object.keys(areas).filter(function(id){
+                        return id.slice(2)==="0000";
+                    }).map(function(id){
+                        return {value:id,text:areas[id]};
                     });
                 }else{
-                    if(!$(this).data('cascadingDropdownList')){
-                        throw new Error('You has not init cascadingDropdownList!');
-                    }
-                    params=Array.prototype.slice.call(args,1);
-                    if (setMethods.hasOwnProperty(args[0])){
-                        method=setMethods[args[0]];
-                        return this.each(function(idx){
-                            var $self=$(this);
-                            method.apply($self,params);
-                            _render.call($self);
-                        });
-                    }else if(getMethods.hasOwnProperty(args[0])){
-                        method=getMethods[args[0]];
-                        return method.apply(this,params);
-                    }else{
-                        throw new Error('There is no such method');
-                    }
-                }
-            };
-            $.fn.cascadingDropdownList.default={
-                datas:[],
-                tabs:[],
-                placeholder:"请选择",
-                clickTab:function(){}
-
-            };
-            function setOption(option){
-                var $self=this,
-                        params=$self.data("cascadingDropdownList");
-                $.extend(params,{_loading:false},option);
-                _render.call($self);
-            }
-            function _init(params){
-                return this;
-            }
-            function _render(){
-                var $self=this,
-                        params=$self.data("cascadingDropdownList"),
-                        datas=params.datas,
-                        tabs=params.tabs,
-                        placeholder=params.placeholder,
-                        clickTab=params.clickTab,
-                        _show=params._show;
-                $self.addClass("cascading-dropDown-container").html([
-                    $("<span/>",{
-                        "class":"cascading-dropDown-label",
-                        "html":tabs.length?tabs.reduce(function(target,tab){
-                            return target+tab.text;
-                        },""):placeholder,
-                        "click":function(){
-                            params._show=true;
-                            _render.call($self);
-                        }
-                    }),
-                    $("<div/>",{
-                        "class":function(){
-                            var cls="cascading-dropDown-list-container";
-                            if(!_show){
-                                cls+=" cascading-hide"
-                            }
-                            return cls;
-                        }
-                    }).append(
-                        $("<div/>",{
-                            "class":"cascading-close",
-                            "html":"&times;",
-                            "click":function(){
-                                params._show=false;
-                                _render.call($self);
-                            }
-                        }),
-                        $("<div/>",{
-                            "class":"cascading-labs"
-                        }).append(
-                            tabs.length?tabs.map(function(data,idx){
-                                return $("<div/>",{
-                                    "class":"cascading-lab",
-                                    "html":data.text,
-                                    "click":function(){
-                                        params._loading=true;
-                                        _render.call($self);
-                                        clickTab(data,idx,tabs,datas);
-                                    }
-                                })
-                            }):$("<div/>",{
-                                "class":"cascading-lab",
-                                "html":placeholder
-                            })
-                        ),
-                        $("<div/>",{
-                            "class":"cascading-content"
-                        }).append(
-                            function(){
-                                if(params._loading){
-                                    return loading();
-                                }else{
-                                    return $("<ul/>").append(
-                                        datas.map(function(data){
-                                            return $("<li/>").append(
-                                                $("<a/>",{
-                                                    "class":"cascading-item",
-                                                    "html":data.text
-                                                })
-
-                                            )
-                                        })
-                                    )
-                                }
-                            }()
-                        )
-                    )]
-                )
-            }
-            function loading(){
-                return $("<div/>",{
-                    "class":"cascading-loading",
-                    "text":"加载中..."
-                })
-            }
-        })(jQuery);
-        $("#cascading-dropDown").cascadingDropdownList({
-            datas:provinces,
-            tabs:[{text:"北京市",value:"110000"},{text:"市辖区",value:"110100"},{text:"东城区",value:"110101"}],
-            placeholder:"请选择省份",
-            clickTab:function(data,idx,tabs,datas){
-                var prevTab=tabs[idx-1];
-                if(!prevTab){
-                    datas=provinces;
-                }else{
+                    /*如果点击的tab前面一级是省则获取该省下面的市*/
                     if(prevTab.value.slice(2)==="0000"){
+                        /*获取市*/
                         datas=Object.keys(areas).filter(function(id){
                             if(id.slice(0,2)===prevTab.value.slice(0,2)&&id.slice(4)==="00"&&id.slice(2)!=="0000"){
                                 return true;
@@ -280,12 +50,45 @@
                         })
                     }
                 }
-                tabs=tabs.slice(0,idx+1);
-                $("#cascading-dropDown").cascadingDropdownList("setOption",{
-                    datas:datas,
-                    tabs:tabs
-                });
+                this.cascadingDropdownList("setDatas",datas);
+            },
+            clickOption:function(data,idx,tabs,datas){
+                if(data.value.slice(4)!=="00"){
+                    /*当点击的是县的时候，将下拉面板关闭*/
+                    $("#cascading-dropDown").cascadingDropdownList("close");
+                }else if(data.value.slice(2,4)!=="00"){
+                    /*当点击的是市的时候，获取该市下面的县*/
+                    datas=Object.keys(areas).filter(function(id){
+                        if(id.slice(0,4)===data.value.slice(0,4)&&id!==data.value){
+                            return true;
+                        }
+                    }).map(function(id){
+                        return {value:id,text:areas[id]};
+                    });
+                }else{
+                    /*当点击的省的时候，获取该省下面的市*/
+                    datas=Object.keys(areas).filter(function(id){
+                        if(id.slice(0,2)===data.value.slice(0,2)&&id.slice(4)==="00"&&id!==data.value){
+                            return true;
+                        }
+                    }).map(function(id){
+                        return {value:id,text:areas[id]};
+                    });
+                }
+                this.cascadingDropdownList("setDatas",datas);
             }
+        });
+        $("#getCheckedTabs").on("click",function(){
+            var checkedTabs=$("#cascading-dropDown").cascadingDropdownList("getCheckedTabs");
+            $("#show").val("当前选中的tabs是:"+JSON.stringify(checkedTabs));
+        });
+        $("#getChecked").on("click",function(){
+            var checked=$("#cascading-dropDown").cascadingDropdownList("getChecked");
+            $("#show").val("当前选中的数据是:"+JSON.stringify(checked));
+        });
+        $("#getValue").on("click",function(){
+            var value=$("#cascading-dropDown").cascadingDropdownList("getValue");
+            $("#show").val("当前选中的值是:"+value);
         });
     </script>
 </body>
