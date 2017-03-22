@@ -9,6 +9,7 @@
     display: block;
     border-bottom: 1px solid white;
     position: relative;
+    z-index: 10000;
 }
 .cascading-dropDown-label{
     padding: 4px 8px;

@@ -26,6 +26,13 @@
             datas:[{text:"县",value:"110200"},{text:"市辖区",value:"110100"}],
             tabs:[{text:"北京市",value:"110000"},{text:"市辖区",value:"110100"}],
             placeholder:"请选择",
+            renderLabel:function(tabs,placeholder,datas){
+                 if(tabs.length){
+                    return tabs[tabs.length-1].text;
+                 }else{
+                      return placeholder;
+                 }
+             },
             clickTab:function(tab,idx,tabs,datas){
                 /*因为点击某一级tab时候下拉面板中的数据是通过上级tab来决定的，
                 * 比如当前的tabs为 北京市 市辖区 海淀区
