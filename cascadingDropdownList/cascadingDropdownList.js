@@ -144,7 +144,7 @@
                         var renderTabs=tabs,isContain,values=datas.map(function(data){
                             return data.value;
                         });
-                        if($.inArray(tabs[tabs.length-1].value,values)===-1){
+                        if(!tabs.length||$.inArray(tabs[tabs.length-1].value,values)===-1){
                             renderTabs=tabs.concat({text:placeholder});
                         }
                         return renderTabs.map(function(tab,idx){
@@ -183,7 +183,7 @@
                                                 var values=datas.map(function(data){
                                                     return data.value;
                                                 });
-                                                if($.inArray(tabs[tabs.length-1].value,values)===-1){
+                                                if(!tabs.length||$.inArray(tabs[tabs.length-1].value,values)===-1){
                                                     tabs[tabs.length]=data;
                                                 }else{
                                                     tabs[tabs.length-1]=data;
